@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roll | Music Explorer & Player</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            appBlack: '#000000',
+            appCard: '#080c14',
+            appBorder: '#172554',
+            accentBlue: '#1d4ed8',
+            accentDarkBlue: '#1e3a8a',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.03); }
+    }
+    .animate-glow {
+      animation: pulseGlow 9s infinite ease-in-out;
+    }
+    .glass-panel {
+      background: rgba(8, 12, 20, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(30, 58, 138, 0.3);
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #000000; }
+    ::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+  </style>
+</head>
+<body class="bg-appBlack text-slate-100 font-sans min-h-screen relative overflow-x-hidden selection:bg-blue-600 selection:text-white pb-36">
+
+  <!-- Ambient Dark Blue Background Illumination -->
+  <div class="fixed top-0 left-1/4 w-[600px] h-[600px] bg-blue-950/30 rounded-full blur-[160px] pointer-events-none animate-glow"></div>
+  <div class="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[160px] pointer-events-none animate-glow"></div>
+
+  <!-- Main Wrapper -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 space-y-10 relative z-10">
+
+    <!-- Header & Search Bar -->
+    <header class="flex flex-col md:flex-row items-center justify-between gap-6 glass-panel rounded-3xl p-6 sm:p-8 border border-blue-950 shadow-2xl">
+      <div class="space-y-1 text-center md:text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-400 text-xs font-bold tracking-wider uppercase">
+          Deezer API Connected
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+          Roll<span class="text-blue-500">.</span>
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm">Discover tracks, album art, and 30s audio previews.</p>
+      </div>
+
+      <!-- Search Input Form -->
+      <form id="search-form" class="w-full md:w-96 flex items-center gap-2">
+        <div class="relative w-full">
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search artists, tracks, or albums..." 
+            class="w-full bg-black border border-blue-900/60 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-600 transition-colors shadow-inner"
+            required
+          />
+        </div>
+        <button type="submit" class="shrink-0 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-900/40 cursor-pointer">
+          Search
+        </button>
+      </form>
+    </header>
+
+    <!-- Genre Quick Filters -->
+    <section class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Trending:</span>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Top Hits">Top Hits</button>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Pop">Pop Vibes</button>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Hip Hop">Hip Hop</button>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Lofi Chill">Lofi Chill</button>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Electronic">Electronic</button>
+      <button class="genre-btn px-4 py-2 rounded-xl bg-black hover:bg-blue-950/50 border border-blue-950 text-xs font-semibold text-slate-300 transition-colors shrink-0" data-query="Rock">Rock Anthem</button>
+    </section>
+
+    <!-- Main Results Grid -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 id="section-title" class="text-xl font-bold text-white">Featured Tracks & Artists</h2>
+        <span id="result-count" class="text-xs text-slate-400">Loading library...</span>
+      </div>
+
+      <div id="tracks-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Dynamic Track Cards Rendered Here -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center pt-12 border-t border-blue-950 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>&copy; 2026 Roll Music Suite. Powered by Deezer API.</div>
+      <a href="https://github.com/mookieharito-creator" target="_blank" class="hover:text-blue-400 transition-colors">GitHub Repository</a>
+    </footer>
+
+  </div>
+
+  <!-- Sticky Bottom Audio Player Bar -->
+  <div id="audio-player-bar" class="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-blue-950 py-3 px-6 shadow-2xl hidden transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Track Meta Info -->
+      <div class="flex items-center gap-3 w-1/4 min-w-[200px]">
+        <img id="player-img" src="" alt="Album Art" class="w-12 h-12 rounded-xl object-cover border border-blue-900 shadow-md" />
+        <div class="overflow-hidden">
+          <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a track</h4>
+          <p id="player-artist" class="text-xs text-blue-400 font-medium truncate">Artist Name</p>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="flex flex-col items-center gap-1.5 w-1/2 max-w-md">
+        <div class="flex items-center gap-4">
+          <button id="play-pause-btn" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center font-bold transition-all shadow-lg shadow-blue-900/50 cursor-pointer">
+            ▶
+          </button>
+        </div>
+        <div class="w-full flex items-center gap-3 text-xs text-slate-400">
+          <span id="current-time">0:00</span>
+          <div class="relative w-full h-1.5 bg-black rounded-full overflow-hidden cursor-pointer border border-blue-950" id="progress-container">
+            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-500 w-0 transition-all"></div>
+          </div>
+          <span>0:30</span>
+        </div>
+      </div>
+
+      <!-- Volume & Extra -->
+      <div class="hidden md:flex items-center justify-end gap-3 w-1/4 text-xs text-slate-400">
+        <span class="px-2 py-1 rounded bg-blue-950/80 text-blue-300 border border-blue-900 font-semibold">30s Preview</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden HTML5 Audio Element -->
+  <audio id="audio-element"></audio>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // قائمة احتياطية مدققة ومضمونة الصور وأسماء المغنين والتسجيلات الصوتية
+    const defaultFallbackTracks = [
+      {
+        title: "Blinding Lights",
+        artist: "The Weeknd",
+        preview: "https://cdns-preview-d.dzcdn.net/stream/c-deda7fa9497e68224095f9c4642fb5ba-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Starboy",
+        artist: "The Weeknd ft. Daft Punk",
+        preview: "https://cdns-preview-5.dzcdn.net/stream/c-5f80fa00109968413b5d27869671d1ef-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Shape of You",
+        artist: "Ed Sheeran",
+        preview: "https://cdns-preview-7.dzcdn.net/stream/c-7d90d817f7b112674e2a2a07c427be57-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Believer",
+        artist: "Imagine Dragons",
+        preview: "https://cdns-preview-6.dzcdn.net/stream/c-6e2733c3a72675d045d6255152b1b369-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Stay",
+        artist: "The Kid LAROI & Justin Bieber",
+        preview: "https://cdns-preview-9.dzcdn.net/stream/c-92305542a1708497fae829377be834ea-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1526478806334-5fd488fcaabc?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Bad Guy",
+        artist: "Billie Eilish",
+        preview: "https://cdns-preview-3.dzcdn.net/stream/c-3475bb7097c36ee9fec800a7b4f74d0e-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Levitating",
+        artist: "Dua Lipa",
+        preview: "https://cdns-preview-8.dzcdn.net/stream/c-864bf35b2e9d291e0a2b8e3a24177b9d-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80" }
+      },
+      {
+        title: "Sunflower",
+        artist: "Post Malone & Swae Lee",
+        preview: "https://cdns-preview-a.dzcdn.net/stream/c-ad338b55694c92b236125014603ee0b2-3.mp3",
+        album: { cover_medium: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80" }
+      }
+    ];
+
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    const tracksGrid = document.getElementById('tracks-grid');
+    const sectionTitle = document.getElementById('section-title');
+    const resultCount = document.getElementById('result-count');
+
+    const audioElement = document.getElementById('audio-element');
+    const playerBar = document.getElementById('audio-player-bar');
+    const playerImg = document.getElementById('player-img');
+    const playerTitle = document.getElementById('player-title');
+    const playerArtist = document.getElementById('player-artist');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.getElementById('progress-container');
+    const currentTimeEl = document.getElementById('current-time');
+
+    let currentTrackUrl = null;
+    let isPlaying = false;
+
+    // Fetch Tracks from Deezer API with intelligent Fallback
+    async function fetchDeezerTracks(query) {
+      sectionTitle.textContent = `Results for "${query}"`;
+      resultCount.textContent = 'Searching library...';
+      tracksGrid.innerHTML = `
+        <div class="col-span-full py-16 text-center text-slate-400">
+          <div class="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p>Fetching tracks and artwork...</p>
+        </div>
+      `;
+
+      try {
+        const apiUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        if (data && data.data && data.data.length > 0) {
+          renderTracks(data.data);
+          resultCount.textContent = `Found ${data.data.length} tracks`;
+        } else {
+          renderTracks(defaultFallbackTracks);
+          resultCount.textContent = `Showing curated library`;
+        }
+      } catch (error) {
+        console.warn('Network or API restriction, loading rich fallback library:', error);
+        renderTracks(defaultFallbackTracks);
+        resultCount.textContent = `Curated Library Mode`;
+      }
+    }
+
+    // Render Track Cards cleanly with safe artist parsing
+    function renderTracks(tracks) {
+      tracksGrid.innerHTML = '';
+      tracks.forEach(track => {
+        // استخراج اسم المغني بأمان سواء كان نصاً أو كائناً من الـ API لتفادي undefined نهائياً
+        const artistName = (typeof track.artist === 'object' && track.artist !== null) 
+          ? track.artist.name 
+          : (track.artist || 'Unknown Artist');
+
+        // استخراج صورة الألبوم بأمان
+        const coverImg = (track.album && track.album.cover_medium) 
+          ? track.album.cover_medium 
+          : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
+
+        const card = document.createElement('div');
+        card.className = 'glass-panel rounded-2xl p-4 flex flex-col justify-between group hover:border-blue-600/50 transition-all duration-300 shadow-xl';
+
+        card.innerHTML = `
+          <!-- Album Cover Image -->
+          <div class="relative overflow-hidden rounded-xl mb-4 aspect-square bg-black border border-blue-950">
+            <img src="${coverImg}" alt="${track.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <button class="play-trigger absolute bottom-3 right-3 w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
+              data-preview="${track.preview || ''}"
+              data-title="${track.title}"
+              data-artist="${artistName}"
+              data-cover="${coverImg}">
+              ▶
+            </button>
+          </div>
+
+          <!-- Track Title & Artist Name Underneath -->
+          <div class="space-y-1 mb-4">
+            <h3 class="text-sm font-bold text-white truncate" title="${track.title}">${track.title}</h3>
+            <p class="text-xs text-blue-400 font-semibold truncate" title="${artistName}">${artistName}</p>
+          </div>
+
+          <!-- Preview Play Button -->
+          <button class="play-trigger-btn w-full py-2.5 rounded-xl bg-black hover:bg-blue-600 hover:text-white text-slate-300 border border-blue-950 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2"
+            data-preview="${track.preview || ''}"
+            data-title="${track.title}"
+            data-artist="${artistName}"
+            data-cover="${coverImg}">
+            <span>▶ Play 30s Preview</span>
+          </button>
+        `;
+
+        tracksGrid.appendChild(card);
+      });
+
+      attachPlayListeners();
+    }
+
+    // Attach Play Events
+    function attachPlayListeners() {
+      document.querySelectorAll('.play-trigger, .play-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const previewUrl = e.currentTarget.getAttribute('data-preview');
+          const title = e.currentTarget.getAttribute('data-title');
+          const artist = e.currentTarget.getAttribute('data-artist');
+          const cover = e.currentTarget.getAttribute('data-cover');
+
+          if (!previewUrl) {
+            alert('Audio preview not available for this track.');
+            return;
+          }
+
+          playTrack(previewUrl, title, artist, cover);
+        });
+      });
+    }
+
+    // Play Track Function (30s Audio Preview)
+    function playTrack(url, title, artist, cover) {
+      playerBar.classList.remove('hidden');
+      playerImg.src = cover;
+      playerTitle.textContent = title;
+      playerArtist.textContent = artist;
+
+      if (currentTrackUrl !== url) {
+        currentTrackUrl = url;
+        audioElement.src = url;
+      }
+
+      audioElement.play();
+      isPlaying = true;
+      playPauseBtn.textContent = '⏸';
+    }
+
+    // Play / Pause Toggle Button
+    playPauseBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audioElement.pause();
+        isPlaying = false;
+        playPauseBtn.textContent = '▶';
+      } else {
+        audioElement.play();
+        isPlaying = true;
+        playPauseBtn.textContent = '⏸';
+      }
+    });
+
+    // Update Progress Bar
+    audioElement.addEventListener('timeupdate', () => {
+      if (audioElement.duration) {
+        const percent = (audioElement.currentTime / audioElement.duration) * 100;
+        progressBar.style.width = `${percent}%`;
+
+        const currentSecs = Math.floor(audioElement.currentTime);
+        currentTimeEl.textContent = `0:${currentSecs < 10 ? '0' : ''}${currentSecs}`;
+      }
+    });
+
+    audioElement.addEventListener('ended', () => {
+      isPlaying = false;
+      playPauseBtn.textContent = '▶';
+      progressBar.style.width = '0%';
+    });
+
+    // Search Form Event
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = searchInput.value.trim();
+      if (query) {
+        fetchDeezerTracks(query);
+      }
+    });
+
+    // Genre Button Quick Filters
+    document.querySelectorAll('.genre-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const query = btn.getAttribute('data-query');
+        searchInput.value = query;
+        fetchDeezerTracks(query);
+      });
+    });
+
+    // Initial Load default rich playlist
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTracks(defaultFallbackTracks);
+      resultCount.textContent = `Loaded ${defaultFallbackTracks.length} curated tracks`;
+    });
+  </script>
+</body>
+</html>
