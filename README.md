@@ -17,5 +17,5 @@
 * **Responsive Grid Layout:** Fluid design that adapts seamlessly across mobile devices, tablets, and desktop screens.
 
 ## 📦 Deployment & Links
-* **GitHub Repository:** [Insert GitHub Repo Link Here]
+* **GitHub Repository:** [https://github.com/mookieharito-creator/roll-music-app/settings]
 * **Live Application URL:** [Insert Deployed App URL Here]
