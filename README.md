@@ -18,4 +18,4 @@
 
 ## 📦 Deployment & Links
 * **GitHub Repository:** [https://github.com/mookieharito-creator/roll-music-app/settings]
-* **Live Application URL:** [Insert Deployed App URL Here]
+* **Live Application URL:** [https://mookieharito-creator.github.io/roll-music-app/]
